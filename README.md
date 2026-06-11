@@ -1,4 +1,4 @@
-# 📁 ManzanaresDev — All
+# 📁 ManzanaresDev
 
 Dépôt centralisé regroupant tous mes projets et ressources de développement web.
 
