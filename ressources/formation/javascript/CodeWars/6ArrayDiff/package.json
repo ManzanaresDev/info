@@ -1,0 +1,14 @@
+{
+  "name": "arraydiff",
+  "version": "1.0.0",
+  "description": "",
+  "main": "arraydiff.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/arraydiff.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

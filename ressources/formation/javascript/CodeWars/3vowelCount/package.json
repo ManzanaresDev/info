@@ -1,0 +1,14 @@
+{
+  "name": "vowel-count",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/vowel-count.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

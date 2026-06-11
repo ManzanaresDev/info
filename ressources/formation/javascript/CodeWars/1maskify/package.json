@@ -1,0 +1,14 @@
+{
+  "name": "maskify",
+  "version": "1.0.0",
+  "description": "",
+  "main": "maskify.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/maskify.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

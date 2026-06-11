@@ -1,0 +1,29 @@
+.rating {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 320px;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.star-empty {
+  font-size: 35px;
+  color: #d9d9d9;
+}
+
+.star-full {
+  color: #c9a227;
+}
+
+.rating-text {
+  color: #5c5c4a;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 300;
+  font-style: italic;
+}

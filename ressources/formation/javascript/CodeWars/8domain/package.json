@@ -1,0 +1,14 @@
+{
+  "name": "domain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "domain.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/domain.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

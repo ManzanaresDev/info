@@ -1,0 +1,14 @@
+{
+  "name": "tower-builder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "towerBuilder.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/towerBuilder.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

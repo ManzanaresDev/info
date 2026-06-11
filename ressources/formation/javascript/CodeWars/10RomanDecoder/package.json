@@ -1,0 +1,14 @@
+{
+  "name": "roman-decoder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "romanDecoder.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/romanDecoder.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

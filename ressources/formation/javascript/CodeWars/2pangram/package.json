@@ -1,0 +1,14 @@
+{
+  "name": "pangram",
+  "version": "1.0.0",
+  "description": "",
+  "main": "exercice.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/pangram.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

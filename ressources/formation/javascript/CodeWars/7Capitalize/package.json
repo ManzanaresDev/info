@@ -1,0 +1,14 @@
+{
+  "name": "capitalize",
+  "version": "1.0.0",
+  "description": "",
+  "main": "capitalize.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/capitalize.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "moving-zeros-to-the-end",
+  "version": "1.0.0",
+  "description": "",
+  "main": "movingZerosToTheEnd.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ./test/movingZerosToTheEnd.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.2"
+}
