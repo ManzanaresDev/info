@@ -1,6 +1,6 @@
 # 📁 ManzanaresDev
 
-Dépôt centralisé regroupant tous mes projets et ressources de développement web.
+Dépôt centralisé regroupant mes ressources de développement web.
 
 ---
 
