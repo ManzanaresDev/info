@@ -1,0 +1,499 @@
+# 🔐 Authentification Admin avec Next.js App Router, Neon, JWT et Cookies HttpOnly
+
+# 📑 Sommaire
+
+1. [📦 Installation](#-installation)
+2. [🗄️ Création de la table administrateur](#️-création-de-la-table-administrateur)
+3. [🔑 Création d'un compte administrateur](#-création-dun-compte-administrateur)
+4. [⚙️ Variables d'environnement](#️-variables-denvironnement)
+5. [📁 Structure recommandée](#-structure-recommandée)
+6. [🗄️ Connexion à Neon](#️-connexion-à-neon)
+7. [🔐 Gestion JWT](#-gestion-jwt)
+8. [🔑 Route de connexion](#-route-de-connexion)
+9. [🚪 Route de déconnexion](#-route-de-déconnexion)
+10. [🛡️ Middleware de protection](#️-middleware-de-protection)
+11. [🖥️ Page de connexion](#️-page-de-connexion)
+12. [👨‍💻 Dashboard Admin](#-dashboard-admin)
+13. [🔒 Sécurité](#-sécurité)
+14. [✅ Flux complet](#-flux-complet)
+15. [🎯 Résultat](#-résultat)
+
+---
+
+Guide complet compatible avec les dernières versions de Next.js (App Router) pour mettre en place une authentification administrateur sécurisée avec :
+
+- ⚡ Next.js App Router
+- 🗄️ PostgreSQL Neon
+- 🔑 JWT
+- 🍪 Cookies HttpOnly
+- 🛡️ Middleware de protection
+- 🔒 bcryptjs
+- 📝 TypeScript
+
+---
+
+# 📦 Installation
+
+```bash
+npm install bcryptjs jsonwebtoken
+npm install -D @types/bcryptjs @types/jsonwebtoken
+```
+
+---
+
+# 🗄️ Création de la table administrateur
+
+Exécutez cette requête dans Neon :
+
+```sql
+CREATE TABLE admin_users (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+# 🔑 Création d'un compte administrateur
+
+Générez un hash bcrypt :
+
+```ts
+import bcrypt from "bcryptjs";
+
+const hash = await bcrypt.hash("MonMotDePasse123!", 12);
+
+console.log(hash);
+```
+
+Puis insérez l'administrateur :
+
+```sql
+INSERT INTO admin_users (email, password_hash)
+VALUES (
+    'admin@example.com',
+    '$2b$12$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+);
+```
+
+---
+
+# ⚙️ Variables d'environnement
+
+Créer un fichier :
+
+```text
+.env.local
+```
+
+```env
+DATABASE_URL=postgresql://...
+JWT_SECRET=votre-cle-secrete-tres-longue-et-complexe
+```
+
+Générez une clé robuste :
+
+```bash
+openssl rand -base64 32
+```
+
+---
+
+# 📁 Structure recommandée
+
+```text
+src/
+├── app/
+│   ├── api/
+│   │   └── auth/
+│   │       ├── login/
+│   │       │   └── route.ts
+│   │       └── logout/
+│   │           └── route.ts
+│   │
+│   ├── login/
+│   │   └── page.tsx
+│   │
+│   └── admin/
+│       └── page.tsx
+│
+├── lib/
+│   ├── auth.ts
+│   └── db.ts
+│
+└── middleware.ts
+```
+
+---
+
+# 🗄️ Connexion à Neon
+
+## lib/db.ts
+
+```ts
+import { neon } from "@neondatabase/serverless";
+
+export const sql = neon(process.env.DATABASE_URL!);
+```
+
+Installer le client Neon :
+
+```bash
+npm install @neondatabase/serverless
+```
+
+---
+
+# 🔐 Gestion JWT
+
+## lib/auth.ts
+
+```ts
+import jwt from "jsonwebtoken";
+
+const SECRET = process.env.JWT_SECRET!;
+
+export const COOKIE_NAME = "admin_session";
+
+export interface JwtPayload {
+  userId: number;
+  email: string;
+}
+
+export function signToken(payload: JwtPayload) {
+  return jwt.sign(payload, SECRET, {
+    expiresIn: "7d",
+  });
+}
+
+export function verifyToken(token: string) {
+  try {
+    return jwt.verify(token, SECRET) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+```
+
+---
+
+# 🔑 Route de connexion
+
+## app/api/auth/login/route.ts
+
+```ts
+import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
+
+import { sql } from "@/lib/db";
+import { COOKIE_NAME, signToken } from "@/lib/auth";
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    const email = body.email?.trim();
+    const password = body.password?.trim();
+
+    if (!email || !password) {
+      return NextResponse.json({ message: "Champs requis" }, { status: 400 });
+    }
+
+    const users = await sql`
+            SELECT *
+            FROM admin_users
+            WHERE email = ${email}
+            LIMIT 1
+        `;
+
+    const user = users[0];
+
+    if (!user) {
+      return NextResponse.json(
+        { message: "Identifiants invalides" },
+        { status: 401 },
+      );
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return NextResponse.json(
+        { message: "Identifiants invalides" },
+        { status: 401 },
+      );
+    }
+
+    const token = signToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    const response = NextResponse.json({
+      success: true,
+    });
+
+    response.cookies.set(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
+  } catch {
+    return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
+  }
+}
+```
+
+---
+
+# 🚪 Route de déconnexion
+
+## app/api/auth/logout/route.ts
+
+```ts
+import { NextResponse } from "next/server";
+import { COOKIE_NAME } from "@/lib/auth";
+
+export async function POST() {
+  const response = NextResponse.json({
+    success: true,
+  });
+
+  response.cookies.delete(COOKIE_NAME);
+
+  return response;
+}
+```
+
+---
+
+# 🛡️ Middleware de protection
+
+## middleware.ts
+
+```ts
+import { NextRequest, NextResponse } from "next/server";
+
+import { COOKIE_NAME, verifyToken } from "@/lib/auth";
+
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  const payload = verifyToken(token);
+
+  if (!payload) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};
+```
+
+---
+
+# 🖥️ Page de connexion
+
+## app/login/page.tsx
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    if (response.ok) {
+      router.push("/admin");
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <input
+        type="password"
+        placeholder="Mot de passe"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <button type="submit">Connexion</button>
+    </form>
+  );
+}
+```
+
+---
+
+# 👨‍💻 Dashboard Admin
+
+## app/admin/page.tsx
+
+```tsx
+"use client";
+
+import { useRouter } from "next/navigation";
+
+export default function AdminPage() {
+  const router = useRouter();
+
+  async function logout() {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+    });
+
+    router.push("/login");
+    router.refresh();
+  }
+
+  return (
+    <main>
+      <h1>Dashboard Admin</h1>
+
+      <button onClick={logout}>Déconnexion</button>
+    </main>
+  );
+}
+```
+
+---
+
+# 🔒 Sécurité
+
+## Cookies HttpOnly
+
+Le JWT n'est jamais accessible via :
+
+```js
+document.cookie;
+```
+
+Il ne peut donc pas être volé par un simple script JavaScript.
+
+---
+
+## Middleware
+
+Les pages protégées sont bloquées avant leur rendu.
+
+---
+
+## Anti-énumération
+
+Toujours retourner le même message :
+
+```text
+Identifiants invalides
+```
+
+Que l'email ou le mot de passe soit incorrect.
+
+---
+
+## Durée du token
+
+```ts
+expiresIn: "7d";
+```
+
+Permet une session persistante sans conserver les identifiants.
+
+---
+
+## Variable JWT secrète
+
+Ne jamais :
+
+```env
+JWT_SECRET=123456
+```
+
+Utiliser une clé longue et aléatoire.
+
+---
+
+# ✅ Flux complet
+
+```text
+Utilisateur
+    │
+    ▼
+Page Login
+    │
+    ▼
+POST /api/auth/login
+    │
+    ▼
+Recherche utilisateur Neon
+    │
+    ▼
+Validation bcrypt
+    │
+    ▼
+Création JWT
+    │
+    ▼
+Cookie HttpOnly
+    │
+    ▼
+Middleware
+    │
+    ▼
+Dashboard Admin
+```
+
+---
+
+# 🎯 Résultat
+
+Vous disposez maintenant d'une authentification administrateur moderne compatible avec :
+
+- Next.js 15+
+- App Router
+- TypeScript
+- Neon PostgreSQL
+- JWT
+- Cookies HttpOnly
+- Middleware Edge Runtime
+- bcryptjs
+
+Sans utiliser `require()`, uniquement des imports ES Modules compatibles avec Next.js.

@@ -1,0 +1,276 @@
+# Tutoriel : La technique Honeypot pour protéger vos formulaires des bots
+
+## Qu'est-ce qu'un Honeypot ?
+
+Un **honeypot** (littéralement « pot de miel ») est un champ piège invisible ajouté à un formulaire pour détecter les bots automatisés. L'idée est simple :
+
+- Un **humain** ne voit pas le champ (il est caché) → il le laisse vide
+- Un **bot** remplit tous les champs qu'il trouve dans le DOM → il remplit le champ piège
+- Si le champ est rempli à la soumission → c'est un bot → on rejette la requête
+
+C'est une protection légère, sans friction pour l'utilisateur, et sans dépendance externe (contrairement aux CAPTCHAs).
+
+---
+
+## Pourquoi placer le champ _hors écran_ plutôt que `display: none` ?
+
+C'est la subtilité clé de cette technique :
+
+```html
+<!-- ❌ Moins efficace -->
+<div style="display: none;">
+  <input type="text" name="website" />
+</div>
+
+<!-- ✅ Plus efficace -->
+<div style="position: absolute; left: -9999px;" aria-hidden="true">
+  <input type="text" name="website" />
+</div>
+```
+
+### Pourquoi cette différence ?
+
+Beaucoup de bots modernes sont entraînés à **ignorer les champs masqués par CSS** (`display: none`, `visibility: hidden`, `opacity: 0`). En revanche, un champ positionné à `-9999px` de l'écran est **présent dans le DOM, visuellement absent** — les bots moins sophistiqués le remplissent sans hésiter.
+
+| Méthode                             | Invisible à l'utilisateur | Détecté par un bot basique | Détecté par un bot avancé |
+| ----------------------------------- | ------------------------- | -------------------------- | ------------------------- |
+| `display: none`                     | ✅                        | ⚠️ Parfois ignoré          | ❌ Souvent ignoré         |
+| `visibility: hidden`                | ✅                        | ⚠️ Parfois ignoré          | ❌ Souvent ignoré         |
+| `position: absolute; left: -9999px` | ✅                        | ✅ Souvent rempli          | ⚠️ Parfois ignoré         |
+
+> **Note :** L'attribut `aria-hidden="true"` est important pour l'accessibilité — il indique aux lecteurs d'écran d'ignorer ce champ, évitant toute confusion pour les utilisateurs malvoyants.
+
+---
+
+## Implémentation
+
+### En HTML/CSS vanilla
+
+```html
+<form action="/submit" method="POST">
+  <!-- Champ honeypot hors écran -->
+  <div class="honeypot-wrapper" aria-hidden="true" tabindex="-1">
+    <label for="website">Ne pas remplir ce champ</label>
+    <input
+      type="text"
+      id="website"
+      name="website"
+      tabindex="-1"
+      autocomplete="off"
+    />
+  </div>
+
+  <!-- Champs normaux du formulaire -->
+  <label for="email">Email</label>
+  <input type="email" id="email" name="email" required />
+
+  <label for="message">Message</label>
+  <textarea id="message" name="message" required></textarea>
+
+  <button type="submit">Envoyer</button>
+</form>
+```
+
+```css
+.honeypot-wrapper {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+```
+
+### En React (avec Tailwind CSS)
+
+```jsx
+function ContactForm() {
+  const [formData, setFormData] = useState({
+    email: "",
+    message: "",
+    website: "", // champ honeypot
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Vérification côté client (optionnel, la vraie vérification est côté serveur)
+    if (formData.website !== "") {
+      console.log("Bot détecté, soumission ignorée.");
+      return;
+    }
+
+    // Envoi normal du formulaire
+    submitForm({ email: formData.email, message: formData.message });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Champ honeypot — hors écran */}
+      <div
+        className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden"
+        aria-hidden="true"
+      >
+        <label htmlFor="website">Ne pas remplir</label>
+        <input
+          type="text"
+          id="website"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          value={formData.website}
+          onChange={(e) =>
+            setFormData({ ...formData, website: e.target.value })
+          }
+        />
+      </div>
+
+      {/* Champs normaux */}
+      <input
+        type="email"
+        name="email"
+        placeholder="Votre email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        required
+      />
+
+      <textarea
+        name="message"
+        placeholder="Votre message"
+        value={formData.message}
+        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+        required
+      />
+
+      <button type="submit">Envoyer</button>
+    </form>
+  );
+}
+```
+
+---
+
+## Vérification côté serveur
+
+La vérification **doit** se faire côté serveur. La validation côté client est triviale à contourner.
+
+### Node.js / Express
+
+```js
+app.post("/submit", (req, res) => {
+  const { email, message, website } = req.body;
+
+  // Si le champ honeypot est rempli → bot
+  if (website && website.trim() !== "") {
+    return res.status(400).json({ error: "Soumission rejetée." });
+    // OU simplement faire semblant d'accepter pour ne pas alerter le bot :
+    // return res.status(200).json({ success: true });
+  }
+
+  // Traitement normal
+  saveToDatabase({ email, message });
+  res.status(200).json({ success: true });
+});
+```
+
+### PHP
+
+```php
+<?php
+$honeypot = $_POST['website'] ?? '';
+
+if (!empty($honeypot)) {
+    // Bot détecté — on rejette silencieusement
+    http_response_code(200); // On fait semblant d'accepter
+    exit;
+}
+
+// Traitement normal du formulaire
+$email   = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+$message = htmlspecialchars($_POST['message'] ?? '');
+// ...
+```
+
+> **Astuce :** Renvoyer un `200 OK` même pour les bots (plutôt qu'une erreur) évite qu'ils adaptent leur comportement et réessaient avec d'autres méthodes.
+
+---
+
+## Bonnes pratiques
+
+### Nommer le champ de façon crédible
+
+Évitez les noms trop évidents comme `honeypot` ou `trap`. Préférez des noms qui semblent légitimes à un bot :
+
+```html
+<!-- ✅ Crédible pour un bot -->
+<input type="text" name="website" />
+<input type="text" name="url" />
+<input type="text" name="phone_number" />
+
+<!-- ❌ Trop évident -->
+<input type="text" name="honeypot" />
+<input type="text" name="bot_trap" />
+```
+
+### Toujours ajouter `tabindex="-1"`
+
+Empêche les utilisateurs naviguant au clavier de tomber accidentellement dans le champ.
+
+```html
+<input type="text" name="website" tabindex="-1" />
+```
+
+### Toujours ajouter `autocomplete="off"`
+
+Évite que le navigateur propose une valeur à l'utilisateur (ce qui ferait un faux positif).
+
+```html
+<input type="text" name="website" autocomplete="off" />
+```
+
+### Ne jamais marquer le champ comme `required`
+
+Un humain ne le verrait pas et ne pourrait pas soumettre le formulaire.
+
+---
+
+## Limites de la technique
+
+| Limitation               | Explication                                                                               |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| **Bots sophistiqués**    | Les bots avancés analysent le DOM et détectent les champs hors écran                      |
+| **Faux positifs rares**  | Un gestionnaire de mots de passe ou un outil d'auto-remplissage pourrait remplir le champ |
+| **Protection partielle** | Ne remplace pas une vraie solution anti-spam pour les formulaires très exposés            |
+
+---
+
+## Combinaison avec d'autres protections
+
+Le honeypot est efficace en première ligne, mais se combine bien avec :
+
+- **Vérification de l'origine** (`Referer`, `Origin` headers)
+- **Rate limiting** — limiter le nombre de soumissions par IP
+- **Token CSRF** — protège contre les soumissions forgées
+- **reCAPTCHA v3 (invisible)** — pour les formulaires très ciblés par les bots
+
+```
+Honeypot → Rate limiting → CSRF token → (optionnel) reCAPTCHA
+```
+
+---
+
+## Récapitulatif
+
+```
+✅ Champ texte avec un nom crédible (website, url...)
+✅ Positionné hors écran avec position: absolute; left: -9999px
+✅ aria-hidden="true" pour l'accessibilité
+✅ tabindex="-1" pour la navigation clavier
+✅ autocomplete="off" pour éviter les auto-remplissages
+✅ Vérification côté serveur (jamais uniquement côté client)
+✅ Réponse 200 même pour les bots (discrétion)
+```
+
+La technique honeypot est une protection simple, sans friction, qui filtre efficacement la majorité des bots automatisés avec très peu de code.
