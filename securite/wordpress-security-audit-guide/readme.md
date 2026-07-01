@@ -1008,6 +1008,7 @@ curl -s -X POST "$TARGET/xmlrpc.php" \
 
 ```markdown
 # Rapport d'Audit de Sécurité WordPress
+
 **Site audité :** example.com  
 **Date :** 2024-01-15  
 **Auditeur :** Votre Nom  
@@ -1017,13 +1018,13 @@ curl -s -X POST "$TARGET/xmlrpc.php" \
 
 ## Résumé Exécutif
 
-| Criticité | Nombre de vulnérabilités |
-|-----------|--------------------------|
-| 🔴 Critique  | 2 |
-| 🟠 Haute     | 3 |
-| 🟡 Moyenne   | 5 |
-| 🔵 Faible    | 4 |
-| ℹ️ Info      | 8 |
+| Criticité   | Nombre de vulnérabilités |
+| ----------- | ------------------------ |
+| 🔴 Critique | 2                        |
+| 🟠 Haute    | 3                        |
+| 🟡 Moyenne  | 5                        |
+| 🔵 Faible   | 4                        |
+| ℹ️ Info     | 8                        |
 
 **Risque global : ÉLEVÉ**
 
@@ -1036,7 +1037,7 @@ curl -s -X POST "$TARGET/xmlrpc.php" \
 **Criticité :** 🔴 Critique (CVSS 9.8)  
 **Composant :** Plugin / WordPress Core / Thème / Configuration  
 **Version affectée :** X.X.X  
-**CVE :** CVE-XXXX-XXXXX (si applicable)  
+**CVE :** CVE-XXXX-XXXXX (si applicable)
 
 **Description :**  
 Description technique de la vulnérabilité.
@@ -1050,7 +1051,8 @@ Réponse : [résultat prouvant la vulnérabilité]
 **Impact :**  
 Description de ce qu'un attaquant peut faire.
 
-**Remédiation :**  
+**Remédiation :**
+
 - Action immédiate : mettre à jour le plugin vers la version X.X.X
 - Action long terme : implémenter une WAF
 
@@ -1060,16 +1062,16 @@ Description de ce qu'un attaquant peut faire.
 
 ## Informations Générales Collectées
 
-| Élément | Valeur | Risque |
-|---------|--------|--------|
-| Version WordPress | 6.3.1 | 🟠 Outdated |
-| Préfixe BDD | wp_ (défaut) | 🟡 Moyen |
-| XML-RPC | Activé | 🟠 Haut |
-| API REST users | Exposée | 🟠 Haut |
-| Fichier debug.log | Accessible | 🔴 Critique |
-| wp-login.php | Non protégé | 🟠 Haut |
-| HTTPS | Activé | 🟢 OK |
-| Headers sécurité | Incomplets | 🟡 Moyen |
+| Élément           | Valeur        | Risque      |
+| ----------------- | ------------- | ----------- |
+| Version WordPress | 6.3.1         | 🟠 Outdated |
+| Préfixe BDD       | wp\_ (défaut) | 🟡 Moyen    |
+| XML-RPC           | Activé        | 🟠 Haut     |
+| API REST users    | Exposée       | 🟠 Haut     |
+| Fichier debug.log | Accessible    | 🔴 Critique |
+| wp-login.php      | Non protégé   | 🟠 Haut     |
+| HTTPS             | Activé        | 🟢 OK       |
+| Headers sécurité  | Incomplets    | 🟡 Moyen    |
 
 ---
 
@@ -1244,36 +1246,36 @@ Plugins à installer pour durcir WordPress :
 
 ### Outils d'analyse
 
-| Outil | Usage | Lien |
-|-------|-------|------|
-| WPScan | Scanner WordPress dédié | https://wpscan.com |
-| Nikto | Scanner de vulnérabilités web | https://github.com/sullo/nikto |
-| SQLMap | Test injection SQL automatisé | https://sqlmap.org |
-| Burp Suite | Proxy d'interception HTTP | https://portswigger.net/burp |
-| OWASP ZAP | Scanner DAST gratuit | https://www.zaproxy.org |
-| Nuclei | Scanner de templates CVE | https://nuclei.projectdiscovery.io |
-| GoSint / theHarvester | OSINT passif | https://github.com/laramies/theHarvester |
+| Outil                 | Usage                         | Lien                                     |
+| --------------------- | ----------------------------- | ---------------------------------------- |
+| WPScan                | Scanner WordPress dédié       | https://wpscan.com                       |
+| Nikto                 | Scanner de vulnérabilités web | https://github.com/sullo/nikto           |
+| SQLMap                | Test injection SQL automatisé | https://sqlmap.org                       |
+| Burp Suite            | Proxy d'interception HTTP     | https://portswigger.net/burp             |
+| OWASP ZAP             | Scanner DAST gratuit          | https://www.zaproxy.org                  |
+| Nuclei                | Scanner de templates CVE      | https://nuclei.projectdiscovery.io       |
+| GoSint / theHarvester | OSINT passif                  | https://github.com/laramies/theHarvester |
 
 ### Bases de données de vulnérabilités
 
-| Ressource | Description |
-|-----------|-------------|
-| https://wpscan.com/plugins | Vulnérabilités plugins WordPress |
-| https://patchstack.com/database | Base complète WP vulnérabilités |
-| https://cve.mitre.org | Base nationale CVE |
-| https://nvd.nist.gov | NVD NIST |
-| https://www.exploit-db.com | Exploits publics |
-| https://packetstormsecurity.com | Exploits et outils |
+| Ressource                       | Description                      |
+| ------------------------------- | -------------------------------- |
+| https://wpscan.com/plugins      | Vulnérabilités plugins WordPress |
+| https://patchstack.com/database | Base complète WP vulnérabilités  |
+| https://cve.mitre.org           | Base nationale CVE               |
+| https://nvd.nist.gov            | NVD NIST                         |
+| https://www.exploit-db.com      | Exploits publics                 |
+| https://packetstormsecurity.com | Exploits et outils               |
 
 ### Ressources de formation
 
-| Ressource | Description |
-|-----------|-------------|
-| https://owasp.org/www-project-top-ten | OWASP Top 10 |
-| https://owasp.org/www-project-wordpress-security-implementation-guideline | Guide WP OWASP |
-| https://wordpress.org/about/security | Documentation sécurité officielle WP |
-| https://portswigger.net/web-security | PortSwigger Web Security Academy (gratuit) |
-| https://hack.me | Pratique légale en ligne |
+| Ressource                                                                 | Description                                |
+| ------------------------------------------------------------------------- | ------------------------------------------ |
+| https://owasp.org/www-project-top-ten                                     | OWASP Top 10                               |
+| https://owasp.org/www-project-wordpress-security-implementation-guideline | Guide WP OWASP                             |
+| https://wordpress.org/about/security                                      | Documentation sécurité officielle WP       |
+| https://portswigger.net/web-security                                      | PortSwigger Web Security Academy (gratuit) |
+| https://hack.me                                                           | Pratique légale en ligne                   |
 
 ### Commandes de référence rapide
 
@@ -1302,6 +1304,6 @@ curl -so/dev/null -w "%{http_code}" "$TARGET/xmlrpc.php"
 
 ---
 
-*Guide rédigé à des fins éducatives et d'audit légal uniquement.*  
-*Dernière mise à jour : Mai 2026*  
-*Référence : OWASP WordPress Security Guide v1.0*
+_Guide rédigé à des fins éducatives et d'audit légal uniquement._  
+_Dernière mise à jour : Mai 2026_  
+_Référence : OWASP WordPress Security Guide v1.0_
